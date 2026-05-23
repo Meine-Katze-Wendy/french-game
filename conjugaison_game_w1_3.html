@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フランス語 活用練習ゲーム 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:    #f59e0b;
+  --orange:  #fb923c;
+  --pink:    #ec4899;
+  --cyan:    #06b6d4;
+  --green:   #22c55e;
+  --purple:  #a855f7;
+  --correct: #10b981;
+  --wrong:   #ef4444;
+  --bg:      #faf5ff;
+}
+
+body {
+  background: linear-gradient(135deg,#fdf4ff 0%,#fef3c7 50%,#ecfdf5 100%);
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 14px 48px;
+}
+
+/* ── HEADER ── */
+.header { text-align: center; margin-bottom: 16px; }
+.header-badge {
+  display: inline-block; background: linear-gradient(90deg,var(--gold),var(--orange));
+  color: white; font-size: 10px; font-weight: 800; letter-spacing: .18em;
+  text-transform: uppercase; padding: 4px 14px; border-radius: 99px; margin-bottom: 6px;
+}
+.header h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(26px,7vw,44px); color: #92400e; line-height: 1;
+}
+.header p { font-size: 13px; color: #a16207; font-weight: 600; margin-top: 4px; }
+
+/* ── FILTER TABS ── */
+.filter-section {
+  width: 100%; max-width: 520px; margin-bottom: 10px;
+}
+.filter-label {
+  font-size: 11px; font-weight: 800; color: #a16207;
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px;
+}
+.filter-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.ftag {
+  padding: 5px 12px; border-radius: 99px; border: 2px solid;
+  font-size: 12px; font-weight: 800; cursor: pointer; transition: all .15s;
+  background: white;
+}
+.ftag.week { border-color: #d97706; color: #d97706; }
+.ftag.week.on { background: #d97706; color: white; }
+.ftag.verb { border-color: #9ca3af; color: #6b7280; }
+.ftag.verb.on { color: white; }
+
+/* verb color per group */
+.ftag[data-v="être"].on   { background:#be185d; border-color:#be185d; }
+.ftag[data-v="avoir"].on  { background:#7c3aed; border-color:#7c3aed; }
+.ftag[data-v="parler"].on { background:#d97706; border-color:#d97706; }
+.ftag[data-v="finir"].on  { background:#0891b2; border-color:#0891b2; }
+.ftag[data-v="aller"].on  { background:#0284c7; border-color:#0284c7; }
+.ftag[data-v="venir"].on  { background:#0e7490; border-color:#0e7490; }
+.ftag[data-v="faire"].on  { background:#15803d; border-color:#15803d; }
+.ftag[data-v="prendre"].on{ background:#166534; border-color:#166534; }
+.ftag[data-v="pouvoir"].on{ background:#4d7c0f; border-color:#4d7c0f; }
+.ftag[data-v="vouloir"].on{ background:#365314; border-color:#365314; }
+
+/* ── SCORE BAR ── */
+.score-bar {
+  display: flex; gap: 14px; margin-bottom: 14px;
+  background: white; border-radius: 14px; padding: 8px 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  font-size: 13px; font-weight: 700; color: #92400e;
+}
+.sc { display: flex; align-items: center; gap: 5px; }
+
+/* ── PROGRESS ── */
+.prog-wrap { width: 100%; max-width: 520px; margin-bottom: 10px; }
+.prog-top { display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#a16207; margin-bottom:4px; }
+.prog-track { background:#fef3c7; border-radius:99px; height:7px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--orange)); border-radius:99px; transition:width .5s ease; }
+
+/* ── STAGE CARD ── */
+.stage-card {
+  background: white; border-radius: 24px;
+  padding: 22px 20px; width: 100%; max-width: 520px;
+  box-shadow: 0 6px 32px rgba(0,0,0,.10);
+  border: 2px solid #fef3c7; position: relative; overflow: hidden;
+}
+.stage-card::after {
+  content:''; position:absolute; top:0;left:0;right:0; height:4px;
+  background: linear-gradient(90deg,var(--gold),var(--orange),var(--pink));
+}
+
+/* ── VERB BADGE ── */
+.verb-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 99px; padding: 4px 14px; font-size: 13px;
+  font-weight: 800; color: white; margin-bottom: 12px;
+}
+
+/* ── CHAR DISPLAY ── */
+.char-display {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 14px; min-height: 130px;
+}
+.char-emoji {
+  font-size: 76px; line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.15));
+  animation: float 3s ease-in-out infinite;
+  margin-bottom: 6px;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+.char-name {
+  font-family: 'Fredoka One', cursive; font-size: 17px;
+  padding: 4px 16px; border-radius: 99px; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+.group-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.gchar { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.gchar .ge { font-size:46px; line-height:1; animation:float 3s ease-in-out infinite; }
+.gchar:nth-child(2) .ge { animation-delay:.5s; }
+.gchar:nth-child(3) .ge { animation-delay:1s; }
+.gchar .gn { font-size:10px; font-weight:700; color:white; padding:2px 8px; border-radius:99px; }
+
+/* ── PROMPT ── */
+.prompt-area { text-align:center; margin-bottom:16px; }
+.prompt-label { font-size:11px; font-weight:800; color:#d97706; letter-spacing:.15em; text-transform:uppercase; margin-bottom:5px; }
+.prompt-sentence {
+  font-family:'Fredoka One',cursive;
+  font-size: clamp(18px,4.5vw,25px); color:#1f2937; line-height:1.4;
+}
+.pron-hl { padding:2px 10px; border-radius:8px; color:white; }
+.blank { display:inline-block; width:80px; height:30px; border-bottom:3px dashed; vertical-align:middle; position:relative; top:-3px; }
+.prompt-tr { font-size:12px; color:#6b7280; margin-top:5px; font-style:italic; }
+
+/* ── CHOICES ── */
+.choices { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.cbtn {
+  background:#f9fafb; border:2px solid #e5e7eb; border-radius:14px;
+  padding:12px 8px; font-family:'Fredoka One',cursive; font-size:20px;
+  color:#374151; cursor:pointer; transition:all .18s; text-align:center;
+}
+.cbtn:hover { background:#fef3c7; border-color:var(--gold); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.1); }
+.cbtn.correct { background:#d1fae5; border-color:var(--correct); color:#065f46; animation:pop .3s; }
+.cbtn.wrong   { background:#fee2e2; border-color:var(--wrong);   color:#991b1b; animation:shake .3s; }
+.cbtn.disabled { cursor:not-allowed; opacity:.55; }
+@keyframes pop  { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+@keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+/* ── FEEDBACK ── */
+.feedback {
+  text-align:center; font-size:14px; font-weight:700;
+  padding:9px 14px; border-radius:12px; margin-bottom:12px;
+  min-height:40px; display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.feedback.correct { background:#d1fae5; color:#065f46; }
+.feedback.wrong   { background:#fee2e2; color:#991b1b; }
+.feedback.empty   { background:#fef9ee; color:#d1d5db; }
+
+/* ── NEXT BTN ── */
+.next-btn {
+  width:100%; background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:white; border:none; border-radius:14px; padding:13px;
+  font-family:'Fredoka One',cursive; font-size:17px; cursor:pointer;
+  box-shadow:0 4px 14px rgba(245,158,11,.3); transition:all .2s; letter-spacing:.03em;
+}
+.next-btn:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(245,158,11,.4); }
+.next-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ── COMPLETE ── */
+.complete { text-align:center; padding:16px; }
+.complete .trophy { font-size:72px; margin-bottom:12px; }
+.complete h2 { font-family:'Fredoka One',cursive; font-size:32px; color:#92400e; margin-bottom:6px; }
+.complete p { font-size:14px; color:#6b7280; margin-bottom:18px; }
+.stars { font-size:44px; color:var(--gold); margin-bottom:14px; letter-spacing:3px; }
+.restart-btn {
+  background:linear-gradient(135deg,var(--gold),#d97706); color:white; border:none;
+  border-radius:14px; padding:12px 28px; font-family:'Fredoka One',cursive;
+  font-size:18px; cursor:pointer; box-shadow:0 4px 14px rgba(245,158,11,.3); transition:all .2s;
+}
+.restart-btn:hover { transform:translateY(-2px); }
+
+/* ── CONJ TABLE (sidebar) ── */
+.ref-table {
+  width:100%; max-width:520px; background:white; border-radius:18px;
+  padding:14px 18px; box-shadow:0 3px 16px rgba(0,0,0,.08);
+  border:1.5px solid #fef3c7; margin-bottom:20px;
+}
+.ref-title { font-family:'Fredoka One',cursive; font-size:15px; color:var(--gold); text-align:center; margin-bottom:10px; }
+.ref-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px 14px; }
+.ref-verb-block { }
+.ref-verb-name { font-size:11px; font-weight:900; color:#92400e; margin-bottom:3px; letter-spacing:.05em; border-bottom:1px solid #fef3c7; padding-bottom:2px; }
+.ref-row { display:flex; gap:4px; font-size:11px; line-height:1.6; }
+.ref-row .rp { color:#9ca3af; font-weight:600; min-width:46px; }
+.ref-row .rv { font-weight:800; color:#b45309; font-family:'Fredoka One',cursive; font-size:13px; }
+
+/* ── CONFETTI ── */
+.confetti-wrap { position:fixed; inset:0; pointer-events:none; z-index:999; }
+.conf { position:absolute; bottom:0; font-size:22px; animation:rise 2s ease-out forwards; }
+@keyframes rise { 0%{opacity:1;transform:translateY(0) rotate(0deg)} 100%{opacity:0;transform:translateY(-85vh) rotate(360deg)} }
+</style>
+</head>
+<body>
+
+<div class="confetti-wrap" id="confetti"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-badge">🌟 Semaines 1–3 · フランス語 練習ゲーム 🌟</div>
+  <h1>Conjugaison !</h1>
+  <p>動詞の活用をマスターしよう 🎮</p>
+</div>
+
+<!-- 活用参照表 -->
+<div class="ref-table">
+  <div class="ref-title">📖 活用チートシート（タップして確認）</div>
+  <div class="ref-grid" id="refGrid"></div>
+</div>
+
+<!-- FILTERS -->
+<div class="filter-section">
+  <div class="filter-label">🎯 練習する範囲を選んでね</div>
+  <div class="filter-row" id="filterRow"></div>
+</div>
+
+<!-- SCORE -->
+<div class="score-bar">
+  <div class="sc"><span>✨</span><span id="scoreDisp">0 pt</span></div>
+  <div class="sc"><span>🔥</span><span id="streakDisp">0連続</span></div>
+  <div class="sc"><span>📊</span><span id="totalDisp">0/10</span></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-top"><span>進捗</span><span id="progLabel">0/10</span></div>
+  <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- STAGE CARD -->
+<div class="stage-card" id="stageCard">
+  <div id="verbBadgeWrap"></div>
+  <div class="char-display" id="charDisplay"></div>
+  <div class="prompt-area" id="promptArea"></div>
+  <div class="choices" id="choicesGrid"></div>
+  <div class="feedback empty" id="feedback">活用形を選んでね 💭</div>
+  <button class="next-btn" id="nextBtn" disabled onclick="nextQ()">つぎへ →</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  VERB DATA
+// ═══════════════════════════════════════════
+const VERBS = {
+  être:    { meaning:'〜である', week:1, color:'#be185d',
+    conj:{je:'suis',tu:'es','il/elle':'est',nous:'sommes',vous:'êtes','ils/elles':'sont'} },
+  avoir:   { meaning:'持っている', week:1, color:'#7c3aed',
+    conj:{je:'ai',tu:'as','il/elle':'a',nous:'avons',vous:'avez','ils/elles':'ont'} },
+  parler:  { meaning:'話す(-er)', week:1, color:'#d97706',
+    conj:{je:'parle',tu:'parles','il/elle':'parle',nous:'parlons',vous:'parlez','ils/elles':'parlent'} },
+  finir:   { meaning:'終わる(-ir)', week:2, color:'#0891b2',
+    conj:{je:'finis',tu:'finis','il/elle':'finit',nous:'finissons',vous:'finissez','ils/elles':'finissent'} },
+  aller:   { meaning:'行く', week:2, color:'#0284c7',
+    conj:{je:'vais',tu:'vas','il/elle':'va',nous:'allons',vous:'allez','ils/elles':'vont'} },
+  venir:   { meaning:'来る', week:2, color:'#0e7490',
+    conj:{je:'viens',tu:'viens','il/elle':'vient',nous:'venons',vous:'venez','ils/elles':'viennent'} },
+  faire:   { meaning:'する・作る', week:3, color:'#15803d',
+    conj:{je:'fais',tu:'fais','il/elle':'fait',nous:'faisons',vous:'faites','ils/elles':'font'} },
+  prendre: { meaning:'とる', week:3, color:'#166534',
+    conj:{je:'prends',tu:'prends','il/elle':'prend',nous:'prenons',vous:'prenez','ils/elles':'prennent'} },
+  pouvoir: { meaning:'〜できる', week:3, color:'#4d7c0f',
+    conj:{je:'peux',tu:'peux','il/elle':'peut',nous:'pouvons',vous:'pouvez','ils/elles':'peuvent'} },
+  vouloir: { meaning:'〜したい', week:3, color:'#365314',
+    conj:{je:'veux',tu:'veux','il/elle':'veut',nous:'voulons',vous:'voulez','ils/elles':'veulent'} },
+};
+
+// キャラクター設定
+const CHARS = {
+  je:       [
+    {emoji:'🩷',name:'Sakura (先生)',isTeacher:true},
+    {emoji:'👧',name:'Moi'},
+    {emoji:'🧒',name:'Moi'},
+  ],
+  tu:       [{emoji:'🧑',name:'Toi'},{emoji:'🌟',name:'Toi'}],
+  'il/elle':  [
+    {emoji:'🌹',name:'Belle'},{emoji:'❄️',name:'Elsa'},
+    {emoji:'🌊',name:'Moana'},{emoji:'🌸',name:'Mulan'},
+    {emoji:'🌺',name:'Tiana'},{emoji:'🦁',name:'Simba'},
+    {emoji:'🐧',name:'Olaf'},{emoji:'🏰',name:'Le prince'},
+  ],
+  nous:     [
+    [{emoji:'🩷',name:'Sakura'},{emoji:'🧒',name:'Amie'}],
+    [{emoji:'🌹',name:'Belle'},{emoji:'❄️',name:'Elsa'},{emoji:'🌸',name:'Mulan'}],
+  ],
+  vous:     [
+    [{emoji:'🌺',name:'Tiana'},{emoji:'🌊',name:'Moana'}],
+    [{emoji:'❄️',name:'Elsa'},{emoji:'🌹',name:'Belle'}],
+  ],
+  'ils/elles':[
+    [{emoji:'🌹',name:'Belle'},{emoji:'❄️',name:'Elsa'},{emoji:'🌊',name:'Moana'}],
+    [{emoji:'🦁',name:'Simba'},{emoji:'🐧',name:'Olaf'}],
+    [{emoji:'🩷',name:'Sakura'},{emoji:'🌸',name:'Mulan'}],
+  ],
+};
+
+// 文テンプレート (verb, pronoun → sentence template & translation)
+const TEMPLATES = {
+  être: {
+    je:         {s:'Je ___ étudiante.',  t:'わたしは学生です。'},
+    tu:         {s:'Tu ___ sympa !',     t:'あなたは親切だね！'},
+    'il/elle':  {s:'Elle ___ belle.',    t:'彼女はきれいです。'},
+    nous:       {s:'Nous ___ amies.',    t:'わたしたちは友達です。'},
+    vous:       {s:'Vous ___ prêtes ?',  t:'あなたたちは準備できてる？'},
+    'ils/elles':{s:'Elles ___ heureuses.',t:'彼女たちは幸せです。'},
+  },
+  avoir: {
+    je:         {s:"J'___ un chat.",     t:'わたしは猫を飼っています。'},
+    tu:         {s:"Tu ___ faim ?",      t:'おなかすいてる？'},
+    'il/elle':  {s:"Elle ___ les yeux bleus.",t:'彼女は青い目をしている。'},
+    nous:       {s:"Nous ___ de la chance.",t:'わたしたちはついている。'},
+    vous:       {s:"Vous ___ des billets ?",t:'チケット持ってる？'},
+    'ils/elles':{s:"Ils ___ un château.", t:'彼らはお城を持っている。'},
+  },
+  parler: {
+    je:         {s:'Je ___ français !',  t:'わたしはフランス語を話します！'},
+    tu:         {s:'Tu ___ anglais ?',   t:'英語話せる？'},
+    'il/elle':  {s:'Elle ___ très bien.',t:'彼女はとても上手に話す。'},
+    nous:       {s:'Nous ___ ensemble.', t:'わたしたちは一緒に話す。'},
+    vous:       {s:'Vous ___ japonais ?',t:'あなたたちは日本語を話しますか？'},
+    'ils/elles':{s:'Ils ___ vite !',     t:'彼らはすごく早口だ！'},
+  },
+  finir: {
+    je:         {s:'Je ___ mes devoirs.',t:'わたしは宿題を終わらせる。'},
+    tu:         {s:'Tu ___ bientôt ?',   t:'もうすぐ終わる？'},
+    'il/elle':  {s:'Il ___ le gâteau.',  t:'彼はケーキを食べ終える。'},
+    nous:       {s:'Nous ___ le cours.', t:'わたしたちは授業を終える。'},
+    vous:       {s:'Vous ___ à quelle heure ?',t:'何時に終わりますか？'},
+    'ils/elles':{s:'Ils ___ le travail.',t:'彼らは仕事を終える。'},
+  },
+  aller: {
+    je:         {s:'Je ___ à Paris !',   t:'わたしはパリに行く！'},
+    tu:         {s:'Tu ___ bien ?',      t:'元気？'},
+    'il/elle':  {s:'Elle ___ au cinéma.',t:'彼女は映画館に行く。'},
+    nous:       {s:'Nous ___ à l\'école.',t:'わたしたちは学校に行く。'},
+    vous:       {s:'Vous ___ où ?',      t:'どこに行くの？'},
+    'ils/elles':{s:'Ils ___ au parc.',   t:'彼らは公園に行く。'},
+  },
+  venir: {
+    je:         {s:'Je ___ demain.',     t:'わたしは明日来ます。'},
+    tu:         {s:'Tu ___ avec moi ?',  t:'一緒に来る？'},
+    'il/elle':  {s:'Elle ___ du Japon.', t:'彼女は日本から来る。'},
+    nous:       {s:'Nous ___ ensemble.', t:'わたしたちは一緒に来る。'},
+    vous:       {s:'Vous ___ à la fête ?',t:'パーティーに来ますか？'},
+    'ils/elles':{s:'Ils ___ ce soir.',   t:'彼らは今夜来る。'},
+  },
+  faire: {
+    je:         {s:'Je ___ du sport.',   t:'わたしはスポーツをする。'},
+    tu:         {s:'Tu ___ la cuisine ?',t:'料理してる？'},
+    'il/elle':  {s:'Il ___ beau aujourd\'hui.',t:'今日は天気がいい。'},
+    nous:       {s:'Nous ___ une promenade.',t:'わたしたちは散歩する。'},
+    vous:       {s:'Vous ___ quoi ?',    t:'何してるの？'},
+    'ils/elles':{s:'Elles ___ des gâteaux.',t:'彼女たちはケーキを作る。'},
+  },
+  prendre: {
+    je:         {s:'Je ___ le train.',   t:'わたしは電車に乗る。'},
+    tu:         {s:'Tu ___ un café ?',   t:'コーヒーにする？'},
+    'il/elle':  {s:'Elle ___ une photo.',t:'彼女は写真を撮る。'},
+    nous:       {s:'Nous ___ le bus.',   t:'わたしたちはバスに乗る。'},
+    vous:       {s:'Vous ___ quoi ?',    t:'何にしますか？'},
+    'ils/elles':{s:'Ils ___ leurs places.',t:'彼らは席に着く。'},
+  },
+  pouvoir: {
+    je:         {s:'Je ___ parler français !',t:'わたしはフランス語が話せる！'},
+    tu:         {s:'Tu ___ m\'aider ?',  t:'手伝ってくれる？'},
+    'il/elle':  {s:'Elle ___ chanter.',  t:'彼女は歌うことができる。'},
+    nous:       {s:'Nous ___ y aller !', t:'わたしたちは行けるよ！'},
+    vous:       {s:'Vous ___ venir demain ?',t:'明日来られますか？'},
+    'ils/elles':{s:'Ils ___ voler !',    t:'彼らは飛べる！'},
+  },
+  vouloir: {
+    je:         {s:'Je ___ un croissant.',t:'わたしはクロワッサンが欲しい。'},
+    tu:         {s:'Tu ___ danser ?',    t:'踊りたい？'},
+    'il/elle':  {s:'Elle ___ apprendre.',t:'彼女は学びたい。'},
+    nous:       {s:'Nous ___ gagner !',  t:'わたしたちは勝ちたい！'},
+    vous:       {s:'Vous ___ du thé ?',  t:'お茶はいかがですか？'},
+    'ils/elles':{s:'Ils ___ partir.',    t:'彼らは出発したい。'},
+  },
+};
+
+const PRONOUNS = ['je','tu','il/elle','nous','vous','ils/elles'];
+const TOTAL = 10;
+
+// ═══════════════════════════════════════════
+//  FILTER STATE
+// ═══════════════════════════════════════════
+const WEEKS = {
+  '週1': ['être','avoir','parler'],
+  '週2': ['finir','aller','venir'],
+  '週3': ['faire','prendre','pouvoir','vouloir'],
+};
+const ALL_VERBS = Object.keys(VERBS);
+let activeFilters = new Set(['すべて']);
+
+function buildFilters() {
+  const row = document.getElementById('filterRow');
+  row.innerHTML = '';
+
+  // ALL button
+  const all = makeTag('すべて','week',true,'すべて');
+  row.appendChild(all);
+
+  // week buttons
+  ['週1','週2','週3'].forEach(w => {
+    row.appendChild(makeTag(w,'week',false,w));
+  });
+
+  // verb buttons
+  ALL_VERBS.forEach(v => {
+    const t = makeTag(v,'verb',false,v);
+    t.dataset.v = v;
+    row.appendChild(t);
+  });
+}
+
+function makeTag(label, cls, active, key) {
+  const b = document.createElement('button');
+  b.className = 'ftag ' + cls + (active ? ' on' : '');
+  b.textContent = label;
+  b.dataset.key = key;
+  b.onclick = () => toggleFilter(key, b);
+  return b;
+}
+
+function toggleFilter(key, btn) {
+  if (key === 'すべて') {
+    activeFilters = new Set(['すべて']);
+  } else {
+    activeFilters.delete('すべて');
+    if (activeFilters.has(key)) {
+      activeFilters.delete(key);
+      if (activeFilters.size === 0) activeFilters.add('すべて');
+    } else {
+      activeFilters.add(key);
+    }
+  }
+  // sync UI
+  document.querySelectorAll('.ftag').forEach(b => {
+    b.classList.toggle('on', activeFilters.has(b.dataset.key));
+  });
+  restartGame();
+}
+
+function getActiveVerbs() {
+  if (activeFilters.has('すべて')) return ALL_VERBS;
+  const result = new Set();
+  activeFilters.forEach(k => {
+    if (WEEKS[k]) WEEKS[k].forEach(v => result.add(v));
+    else if (VERBS[k]) result.add(k);
+  });
+  return result.size > 0 ? [...result] : ALL_VERBS;
+}
+
+// ═══════════════════════════════════════════
+//  REFERENCE TABLE
+// ═══════════════════════════════════════════
+function buildRefTable() {
+  const grid = document.getElementById('refGrid');
+  grid.innerHTML = '';
+  ALL_VERBS.forEach(v => {
+    const vd = VERBS[v];
+    const block = document.createElement('div');
+    block.className = 'ref-verb-block';
+    let rows = Object.entries(vd.conj).map(([pr,fm]) =>
+      `<div class="ref-row"><span class="rp">${pr}</span><span class="rv" style="color:${vd.color}">${fm}</span></div>`
+    ).join('');
+    block.innerHTML = `<div class="ref-verb-name" style="color:${vd.color}">${v} (${vd.meaning})</div>${rows}`;
+    grid.appendChild(block);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════
+let questions=[], currentIdx=0, score=0, streak=0, answered=false;
+
+function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+
+function buildQuestions() {
+  const verbs = getActiveVerbs();
+  const pool = [];
+  verbs.forEach(v => {
+    PRONOUNS.forEach(pr => {
+      pool.push({verb:v, pronoun:pr});
+    });
+  });
+  const shuffled = shuffle(pool);
+  questions = shuffled.slice(0, TOTAL);
+}
+
+function getWrongForms(correctVerb, correctForm) {
+  // collect all forms across all verbs
+  const all = new Set();
+  ALL_VERBS.forEach(v => Object.values(VERBS[v].conj).forEach(f => all.add(f)));
+  all.delete(correctForm);
+  return shuffle([...all]).slice(0,3);
+}
+
+function getChar(pronoun) {
+  const pool = CHARS[pronoun];
+  if (!pool) return {type:'single', emoji:'👤', name:'?', color:'#888'};
+  if (pronoun === 'nous' || pronoun === 'vous' || pronoun === 'ils/elles') {
+    const group = pool[Math.floor(Math.random()*pool.length)];
+    return {type:'group', chars: group};
+  } else {
+    const c = pool[Math.floor(Math.random()*pool.length)];
+    return {type:'single', ...c};
+  }
+}
+
+function renderQuestion() {
+  const q = questions[currentIdx];
+  answered = false;
+  const vd = VERBS[q.verb];
+  const correctForm = vd.conj[q.pronoun];
+  const tmpl = TEMPLATES[q.verb][q.pronoun];
+  const char = getChar(q.pronoun);
+
+  // progress
+  const pct = (currentIdx/TOTAL)*100;
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progLabel').textContent = currentIdx+'/'+TOTAL;
+  document.getElementById('totalDisp').textContent = currentIdx+'/'+TOTAL;
+
+  // verb badge
+  document.getElementById('verbBadgeWrap').innerHTML =
+    `<div class="verb-badge" style="background:${vd.color}">
+       ${q.verb} <span style="font-size:10px;font-weight:600;opacity:.85">${vd.meaning}</span>
+     </div>`;
+
+  // char
+  const cd = document.getElementById('charDisplay');
+  if (char.type === 'single') {
+    if (char.isTeacher) {
+      cd.innerHTML = `
+        <div style="position:relative;display:inline-block">
+          <div class="char-emoji">👩</div>
+          <div style="position:absolute;top:-6px;right:-10px;font-size:26px">🩷</div>
+          <div style="position:absolute;top:-6px;left:-10px;font-size:26px">🩷</div>
+        </div>
+        <div class="char-name" style="background:${vd.color}">💕 ${char.name} 💕</div>`;
+    } else {
+      cd.innerHTML = `
+        <div class="char-emoji">${char.emoji}</div>
+        <div class="char-name" style="background:${vd.color}">${char.name}</div>`;
+    }
+  } else {
+    let html = '<div class="group-row">';
+    char.chars.forEach((c,i) => {
+      const em = c.name==='Sakura'
+        ? `<div style="position:relative;display:inline-block"><span class="ge">👩</span><span style="position:absolute;top:-3px;right:-5px;font-size:12px">🩷</span></div>`
+        : `<span class="ge">${c.emoji}</span>`;
+      html += `<div class="gchar">${em}<span class="gn" style="background:${vd.color}">${c.name}</span></div>`;
+    });
+    html += '</div>';
+    cd.innerHTML = html;
+  }
+
+  // prompt
+  const sentHtml = tmpl.s.replace('___',`<span class="blank" style="border-color:${vd.color}"></span>`);
+  const pronColor = vd.color;
+  document.getElementById('promptArea').innerHTML = `
+    <div class="prompt-label" style="color:${vd.color}">🌟 空欄に正しい活用形を選んでね</div>
+    <div class="prompt-sentence">
+      <span class="pron-hl" style="background:${vd.color}">${q.pronoun}</span> →
+      ${sentHtml}
+    </div>
+    <div class="prompt-tr">${tmpl.t}</div>`;
+
+  // choices
+  const choices = shuffle([correctForm, ...getWrongForms(q.verb, correctForm)]);
+  const cg = document.getElementById('choicesGrid');
+  cg.innerHTML = '';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cbtn';
+    btn.textContent = c;
+    btn.onclick = () => checkAnswer(c, btn, correctForm, vd.color);
+    cg.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback empty';
+  document.getElementById('feedback').textContent = '活用形を選んでね 💭';
+  document.getElementById('nextBtn').disabled = true;
+}
+
+function checkAnswer(choice, btn, correct, color) {
+  if (answered) return;
+  answered = true;
+
+  document.querySelectorAll('.cbtn').forEach(b => {
+    b.classList.add('disabled');
+    b.onclick = null;
+    if (b.textContent === correct) b.classList.add('correct');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (choice === correct) {
+    btn.classList.remove('disabled');
+    btn.classList.add('correct');
+    score += streak >= 2 ? 15 : 10;
+    streak++;
+    fb.className = 'feedback correct';
+    fb.textContent = streak >= 3
+      ? `🔥 ${streak}連続正解！ +${streak>=2?15:10}pt すごい！！`
+      : `✅ 正解！「${correct}」だよ！ +${streak>=2?15:10}pt`;
+    spawnConfetti();
+  } else {
+    btn.classList.add('wrong');
+    streak = 0;
+    fb.className = 'feedback wrong';
+    fb.textContent = `❌ 惜しい！正しくは「${correct}」だよ。`;
+  }
+
+  document.getElementById('scoreDisp').textContent = score+' pt';
+  document.getElementById('streakDisp').textContent = streak+'連続';
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function nextQ() {
+  currentIdx++;
+  if (currentIdx >= TOTAL) showComplete();
+  else renderQuestion();
+}
+
+function showComplete() {
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('progLabel').textContent = TOTAL+'/'+TOTAL;
+  const stars = score>=120?'⭐⭐⭐':score>=80?'⭐⭐':'⭐';
+  const msg = score>=120?'Parfait ! 満点！🎉':score>=80?'Très bien ! よくできました！':'Continue ! もっと練習しよう！';
+  document.getElementById('stageCard').innerHTML = `
+    <div class="complete">
+      <div class="trophy">🏆</div>
+      <h2>Bravo !</h2>
+      <div class="stars">${stars}</div>
+      <p>${msg}</p>
+      <p style="font-size:20px;font-weight:800;color:#92400e;margin-bottom:6px">${score} ポイント！</p>
+      <p style="margin-bottom:20px">フランス語の活用よくがんばった！🌟</p>
+      <button class="restart-btn" onclick="restartGame()">🌟 もう一度チャレンジ！</button>
+    </div>`;
+  spawnConfetti(); spawnConfetti();
+  setTimeout(spawnConfetti,600);
+}
+
+function restartGame() {
+  currentIdx=0; score=0; streak=0; answered=false;
+  document.getElementById('scoreDisp').textContent='0 pt';
+  document.getElementById('streakDisp').textContent='0連続';
+  document.getElementById('totalDisp').textContent='0/'+TOTAL;
+
+  const card = document.getElementById('stageCard');
+  card.innerHTML = `
+    <div id="verbBadgeWrap"></div>
+    <div class="char-display" id="charDisplay"></div>
+    <div class="prompt-area" id="promptArea"></div>
+    <div class="choices" id="choicesGrid"></div>
+    <div class="feedback empty" id="feedback">活用形を選んでね 💭</div>
+    <button class="next-btn" id="nextBtn" disabled onclick="nextQ()">つぎへ →</button>`;
+
+  buildQuestions();
+  renderQuestion();
+}
+
+function spawnConfetti() {
+  const c = document.getElementById('confetti');
+  const em = ['⭐','🌟','✨','💛','🎉','🌸','💚','💙','🩷'];
+  for (let i=0;i<8;i++) {
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.className='conf';
+      d.textContent=em[Math.floor(Math.random()*em.length)];
+      d.style.left=(5+Math.random()*90)+'%';
+      d.style.animationDuration=(1.4+Math.random()*0.8)+'s';
+      c.appendChild(d);
+      setTimeout(()=>d.remove(),2500);
+    },i*100);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+buildRefTable();
+buildFilters();
+buildQuestions();
+renderQuestion();
+</script>
+</body>
+</html>
